@@ -1,0 +1,15 @@
+{
+  "domain": "vnnews",
+  "name": "VN News",
+  "version": "2025.6.26",
+  "documentation": "https://github.com/smarthomeblack/vnnews",
+  "requirements": [
+    "feedparser",
+    "requests",
+    "beautifulsoup4",
+    "aiohttp"
+  ],
+  "codeowners": ["@smarthomeblack"],
+  "iot_class": "cloud_polling",
+  "config_flow": true
+}
