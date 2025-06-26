@@ -3,16 +3,19 @@ import aiohttp
 from bs4 import BeautifulSoup
 import time
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.restore_state import RestoreEntity
-from .const import DOMAIN, SCAN_INTERVAL
+from homeassistant.helpers.event import async_track_time_interval
+from .const import DOMAIN
 from .utils import get_latest_news, add_or_update_news, delete_old_news, get_gemini_api_key, mark_all_old
 import asyncio
 
 CONF_GEMINI_API_KEY = "gemini_api_key"
 CONF_NEWS_SOURCE = "news_source"
+CONF_SCAN_INTERVAL = "scan_interval"
+CONF_NEWS_ITEM_COUNT = "news_item_count"
 
 NEWS_RSS_URLS = {
     "vnexpress": "https://vnexpress.net/rss/tin-moi-nhat.rss",
@@ -189,18 +192,35 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     options = config_entry.options if config_entry.options else config_entry.data
     api_key = options.get(CONF_GEMINI_API_KEY) or get_gemini_api_key()
     news_source = options.get(CONF_NEWS_SOURCE, "vnexpress")
+    scan_interval = int(options.get(CONF_SCAN_INTERVAL, 600))
+    news_item_count = int(options.get(CONF_NEWS_ITEM_COUNT, 10))
     if not api_key:
         _LOGGER.error("Chưa cấu hình Gemini API Key!")
         return
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+        CONF_NEWS_ITEM_COUNT: news_item_count
+    }
     sensor = VNExpressNewsSensor(api_key, news_source)
     sensors = [sensor]
-    # Thêm 10 cảm biến Tin 1 - Tin 10
-    for i in range(1, 11):
+    for i in range(1, news_item_count + 1):
         sensors.append(NewsItemSensor(news_source, i))
     async_add_entities(sensors)
+    _LOGGER.debug(f"Added {len(sensors)} sensors for news_source: {news_source}")
+
+    # Tạo polling riêng cho entry này
+    async def _entry_update(now=None):
+        await sensor.async_update()
+        for s in sensors[1:]:
+            await s.async_update()
+    hass.data[DOMAIN][config_entry.entry_id]["unsub_poll"] = async_track_time_interval(
+        hass, _entry_update, timedelta(minutes=scan_interval)
+    )
+    # Không gọi cập nhật lần đầu ở đây nữa để tránh double update
+    # await _entry_update()
 
 
 class VNExpressNewsSensor(SensorEntity, RestoreEntity):
+    _attr_should_poll = False
     entity_registry_enabled_default = True
 
     def __init__(self, api_key, news_source):
@@ -210,14 +230,21 @@ class VNExpressNewsSensor(SensorEntity, RestoreEntity):
         self._attr_name = f"{news_source.upper()} News"
         self._attr_unique_id = f"vn_news_sensor_{news_source}"
         self._attr_icon = "mdi:newspaper"
-        self._attr_scan_interval = SCAN_INTERVAL
         self._new_count = 0
         self._last_update = None
         self._attributes = {}
-        self._hass = None  # Lưu lại hass instance để dùng khi update
+        self._hass = None
+        self._entry_id = None
 
     async def async_added_to_hass(self):
         self._hass = self.hass
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.unique_id == f"vn_news_{self._news_source}":
+                self._entry_id = entry.entry_id
+                _LOGGER.debug(f"Found config entry_id: {self._entry_id} for news_source: {self._news_source}")
+                break
+        if not self._entry_id:
+            _LOGGER.error(f"Could not find config entry for news_source: {self._news_source}")
         self.async_schedule_update_ha_state(force_refresh=True)
 
     async def async_update(self):
@@ -244,9 +271,10 @@ class VNExpressNewsSensor(SensorEntity, RestoreEntity):
         self._attributes = attributes
         self._state = f"Có {count_new} tin mới" if count_new > 0 else "Không có tin mới"
 
-        # Trigger cập nhật các NewsItemSensor cùng nguồn tin bằng service call
-        if self._hass:
-            for i in range(1, 11):
+        if self._hass and self._entry_id:
+            news_item_count = int(self._hass.data.get(DOMAIN, {}).get(self._entry_id, {}).get(CONF_NEWS_ITEM_COUNT, 10))
+            _LOGGER.debug(f"Updating {news_item_count} NewsItemSensors for {self._news_source}")
+            for i in range(1, news_item_count + 1):
                 entity_id = f"sensor.tin_{i}_{self._news_source}"
                 await self._hass.services.async_call(
                     "homeassistant",
@@ -254,6 +282,8 @@ class VNExpressNewsSensor(SensorEntity, RestoreEntity):
                     {"entity_id": entity_id},
                     blocking=False
                 )
+        else:
+            _LOGGER.warning(f"Cannot update NewsItemSensors: hass or entry_id not set for {self._news_source}")
 
     @property
     def state(self):
@@ -275,15 +305,15 @@ class VNExpressNewsSensor(SensorEntity, RestoreEntity):
 
 
 class NewsItemSensor(SensorEntity):
+    _attr_should_poll = False
     entity_registry_enabled_default = True
 
     def __init__(self, news_source, index, news_data=None):
         self._news_source = news_source
-        self._index = index  # 1-based
+        self._index = index
         self._attr_name = f"Tin {index} ({news_source})"
         self._attr_unique_id = f"vn_news_{news_source}_item_{index}"
         self._attr_icon = "mdi:newspaper-variant-outline"
-        self._attr_scan_interval = SCAN_INTERVAL
         self._state = None
         self._news_data = news_data or {}
 

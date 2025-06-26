@@ -1,0 +1,103 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "📰 Configure VN News",
+        "description": "Set up integration to monitor Vietnamese news from trusted sources",
+        "data": {
+          "gemini_api_key": "🔑 Gemini API Key",
+          "news_source": "📡 News Source",
+          "scan_interval": "⏰ Update Interval (minutes)",
+          "news_item_count": "📊 Number of News Items"
+        },
+        "data_description": {
+          "gemini_api_key": "API Key from Google AI Studio for news summarization",
+          "news_source": "Choose the news source you want to monitor",
+          "scan_interval": "Time between news updates (1-600 minutes)",
+          "news_item_count": "Number of news sensors to create (1-30)"
+        }
+      },
+      "confirm": {
+        "title": "✅ Confirm Configuration",
+        "description": "🔑 **Gemini API Key**: {api_key_masked}\n📰 **News Source**: {news_source}\n⏱️ **Scan Interval**: {scan_interval} minutes\n🔢 **Sensor Count**: {news_item_count}\n\n✅ Click Confirm to save configuration, or Back to edit.",
+        "data": {
+          "confirm": "✅ Confirm and Save Configuration",
+          "back": "🔙 Go Back to Edit"
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "🔑❌ Invalid API Key (needs at least 10 characters)",
+      "invalid_source": "📡❌ Unsupported news source",
+      "invalid_interval": "⏰❌ Update interval must be 1-600 minutes",
+      "invalid_count": "📊❌ News count must be 1-30",
+      "invalid_input": "❌ Invalid input data",
+      "already_configured": "⚠️ This news source is already configured"
+    },
+    "abort": {
+      "already_configured": "🔄 Integration already set up for selected news source",
+      "single_instance_allowed": "⚠️ Only one instance allowed per news source"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "⚙️ VN News Options",
+        "description": "Update settings for VN News integration",
+        "data": {
+          "gemini_api_key": "🔑 Gemini API Key",
+          "scan_interval": "⏰ Update Interval (minutes)",
+          "news_item_count": "📊 Number of News Items"
+        },
+        "data_description": {
+          "gemini_api_key": "Update API Key from Google AI Studio",
+          "scan_interval": "Change time between updates (1-600 minutes)",
+          "news_item_count": "Adjust number of news sensors (1-30)"
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "🔑❌ Invalid API Key (needs at least 10 characters)",
+      "invalid_interval": "⏰❌ Update interval must be 1-600 minutes",
+      "invalid_count": "📊❌ News count must be 1-30",
+      "invalid_input": "❌ Invalid input data"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "vn_news_sensor": {
+        "name": "📰 {news_source} News",
+        "state": {
+          "no_news": "No new news",
+          "new_news": "{count} new articles",
+          "updating": "Updating...",
+          "error": "Error loading news"
+        }
+      },
+      "news_item": {
+        "name": "📄 News {index} ({news_source})",
+        "state": {
+          "no_data": "No data",
+          "loading": "Loading..."
+        }
+      }
+    }
+  },
+  "device": {
+    "vn_news": {
+      "name": "🇻🇳 VN News ({source})"
+    }
+  },
+  "services": {
+    "reload_entry": {
+      "name": "🔄 Reload Entry",
+      "description": "Reload configuration for a specific entry",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID",
+          "description": "ID of the config entry to reload"
+        }
+      }
+    }
+  }
+}

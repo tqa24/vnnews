@@ -1,0 +1,103 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "📰 Cấu hình VN News",
+        "description": "Thiết lập integration để theo dõi tin tức Việt Nam từ các nguồn uy tín",
+        "data": {
+          "gemini_api_key": "🔑 Gemini API Key",
+          "news_source": "📡 Nguồn tin tức",
+          "scan_interval": "⏰ Chu kỳ cập nhật (phút)",
+          "news_item_count": "📊 Số lượng tin hiển thị"
+        },
+        "data_description": {
+          "gemini_api_key": "API Key từ Google AI Studio để tóm tắt tin tức",
+          "news_source": "Chọn nguồn tin tức bạn muốn theo dõi",
+          "scan_interval": "Thời gian giữa các lần cập nhật tin (1-600 phút)",
+          "news_item_count": "Số lượng sensor tin tức sẽ được tạo (1-30)"
+        }
+      },
+      "confirm": {
+        "title": "✅ Xác nhận cấu hình",
+        "description": "🔑 **Gemini API Key**: {api_key_masked}\n📰 **Nguồn tin**: {news_source}\n⏱️ **Chu kỳ quét**: {scan_interval} phút\n🔢 **Số lượng sensor**: {news_item_count}\n\n✅ Nhấn Confirm để lưu cấu hình, hoặc Back để sửa lại.",
+        "data": {
+          "confirm": "✅ Xác nhận và lưu cấu hình",
+          "back": "🔙 Quay lại chỉnh sửa"
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "🔑❌ API Key không hợp lệ (cần ít nhất 10 ký tự)",
+      "invalid_source": "📡❌ Nguồn tin không được hỗ trợ",
+      "invalid_interval": "⏰❌ Chu kỳ cập nhật phải từ 1-600 phút",
+      "invalid_count": "📊❌ Số lượng tin phải từ 1-30",
+      "invalid_input": "❌ Dữ liệu nhập vào không hợp lệ",
+      "already_configured": "⚠️ Nguồn tin này đã được cấu hình"
+    },
+    "abort": {
+      "already_configured": "🔄 Integration này đã được thiết lập cho nguồn tin được chọn",
+      "single_instance_allowed": "⚠️ Chỉ cho phép một instance cho mỗi nguồn tin"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "⚙️ Tùy chọn VN News",
+        "description": "Cập nhật cài đặt cho integration VN News",
+        "data": {
+          "gemini_api_key": "🔑 Gemini API Key",
+          "scan_interval": "⏰ Chu kỳ cập nhật (phút)",
+          "news_item_count": "📊 Số lượng tin hiển thị"
+        },
+        "data_description": {
+          "gemini_api_key": "Cập nhật API Key từ Google AI Studio",
+          "scan_interval": "Thay đổi thời gian giữa các lần cập nhật (1-600 phút)",
+          "news_item_count": "Điều chỉnh số lượng sensor tin tức (1-30)"
+        }
+      }
+    },
+    "error": {
+      "invalid_key": "🔑❌ API Key không hợp lệ (cần ít nhất 10 ký tự)",
+      "invalid_interval": "⏰❌ Chu kỳ cập nhật phải từ 1-600 phút",
+      "invalid_count": "📊❌ Số lượng tin phải từ 1-30",
+      "invalid_input": "❌ Dữ liệu nhập vào không hợp lệ"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "vn_news_sensor": {
+        "name": "📰 {news_source} News",
+        "state": {
+          "no_news": "Không có tin mới",
+          "new_news": "Có {count} tin mới",
+          "updating": "Đang cập nhật...",
+          "error": "Lỗi khi tải tin"
+        }
+      },
+      "news_item": {
+        "name": "📄 Tin {index} ({news_source})",
+        "state": {
+          "no_data": "Không có dữ liệu",
+          "loading": "Đang tải..."
+        }
+      }
+    }
+  },
+  "device": {
+    "vn_news": {
+      "name": "🇻🇳 VN News ({source})"
+    }
+  },
+  "services": {
+    "reload_entry": {
+      "name": "🔄 Tải lại Entry",
+      "description": "Tải lại cấu hình cho một entry cụ thể",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID",
+          "description": "ID của config entry cần tải lại"
+        }
+      }
+    }
+  }
+}
